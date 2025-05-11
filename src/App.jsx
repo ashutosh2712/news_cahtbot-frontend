@@ -1,12 +1,30 @@
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import "./App.css";
+import ChatPage from "./pages/ChatPage";
+import LandingPage from "./pages/LandingPage";
+import Layout from "./components/Layout";
 
+const router = createBrowserRouter([
+  {
+    path: "/",
+    element: <Layout />,
+    children: [
+      {
+        path: "/",
+        element: <LandingPage />,
+      },
+      {
+        path: "/chat",
+        element: <ChatPage />,
+      },
+    ],
+  },
+]);
 function App() {
   return (
-    <div>
-      <h1>Chatbot Frontend</h1>
-
-      <h2>Welcome to the Chatbot Frontend!</h2>
-    </div>
+    <>
+      <RouterProvider router={router} />
+    </>
   );
 }
 
