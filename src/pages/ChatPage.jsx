@@ -18,6 +18,7 @@ const ChatPage = () => {
   const [finalAnswer, setFinalAnswer] = useState("");
 
   const [sessionId, setSessionId] = useState(null); // Store session ID
+  const [sessionStarted, setSessionStarted] = useState(false); // Track session status
   const [history, setHistory] = useState([]);
 
   const [loading, setLoading] = useState(false);
@@ -63,10 +64,13 @@ const ChatPage = () => {
         query
       );
 
+      // Format the final_answer before adding it to history
+      const formattedAnswer = formatFinalAnswer(final_answer);
+
       // After getting the bot response, update the history
       setHistory((prevHistory) => [
         ...prevHistory.slice(0, -1), // Remove the temporary user message
-        { user_message: query, bot_response: finalAnswer }, // Add the bot's response
+        { user_message: query, bot_response: formattedAnswer }, // Add the bot's response
       ]);
 
       // Update state with search results and final answer
@@ -86,6 +90,7 @@ const ChatPage = () => {
       const sessionId = await fetchSessionId(); // Fetch a new session ID
       setSessionId(sessionId); // No need for .json() as Axios returns data directly
       setHistory([]); // Reset chat history
+      setSessionStarted(true); // Mark session as started
     } catch (error) {
       console.error("Error starting new session:", error);
     }
@@ -97,6 +102,7 @@ const ChatPage = () => {
       await clearSession(sessionId); // Clear the session on the back-end
       setSessionId(null);
       setHistory([]);
+      setSessionStarted(false); // Mark session as not started
     }
   };
 
@@ -111,91 +117,115 @@ const ChatPage = () => {
 
   // Function to format the final answer
   const formatFinalAnswer = (answer) => {
-    // Split the answer into individual points by detecting bullet points
-    const points = answer
+    // Remove the first line (":")
+    const formattedAnswer = answer.split(":")[1].trim(); // Split at the colon and take the part after
+
+    // Split the answer into bullet points based on the asterisks (*)
+    const points = formattedAnswer
       .split("*")
-      .filter((point) => point.trim() !== "")
-      .map((point) => point.trim());
+      .map((point) => point.trim())
+      .filter(Boolean); // Remove empty entries
+
     return points;
   };
 
   return (
-    <div className="container mx-auto p-4">
-      <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-lg">
-        <h2 className="text-2xl font-semibold text-center mb-4">AI Chatbot</h2>
+    <div className="container mx-auto p-4 min-h-screen">
+      {/* Show Start New Chat button if session is not started */}
+      {!sessionStarted ? (
+        <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+          <h2 className="text-2xl font-semibold text-center mb-4">
+            AI Chatbot
+          </h2>
 
-        {/* Session Button */}
-        <button
-          onClick={startNewSession}
-          className="w-full bg-indigo-600 text-white p-2 rounded-lg hover:bg-indigo-700 transition duration-300 mb-4"
-        >
-          Start New Chat
-        </button>
-
-        {/* Input Box */}
-        <div className="mb-4">
-          <input
-            type="text"
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Ask a question"
-            className="w-full p-2 border rounded-lg"
-          />
+          <button
+            onClick={startNewSession}
+            className="w-full bg-indigo-600 text-white p-2 rounded-lg hover:bg-indigo-700 transition duration-300 mb-4"
+          >
+            Start New Chat
+          </button>
         </div>
+      ) : (
+        <div className="max-w-xl mx-auto bg-white p-6 rounded-lg shadow-lg">
+          {/* Chat interface */}
+          <h2 className="text-2xl font-semibold text-center mb-4">
+            AI Chatbot
+          </h2>
 
-        {/* Search Button */}
-        <button
-          onClick={handleSearch}
-          className="w-full bg-indigo-600 text-white p-2 rounded-lg hover:bg-indigo-700 transition duration-300"
-        >
-          Search
-        </button>
+          {/* Input Box */}
+          <div className="mb-4">
+            <input
+              type="text"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Ask a question"
+              className="w-full p-2 border rounded-lg"
+            />
+          </div>
 
-        {loading && (
-          <p className="text-center text-gray-500 mt-4">Loading...</p>
-        )}
+          {/* Search Button */}
+          <button
+            onClick={handleSearch}
+            className="w-full bg-indigo-600 text-white p-2 rounded-lg hover:bg-indigo-700 transition duration-300"
+          >
+            Ask
+          </button>
 
-        {/* Display Chat History */}
-        <div className="mt-6">
-          <h3 className="font-semibold text-xl mb-3">Chat History:</h3>
-          <ul>
-            {history.map((msg, index) => (
-              <li key={index} className="mb-4 p-4 border-b">
-                <p className="font-semibold">User: {msg.user_message}</p>
-                <p className="text-gray-700">Bot: {msg.bot_response}</p>
-              </li>
-            ))}
-          </ul>
-        </div>
+          {loading && (
+            <p className="text-center text-gray-500 mt-4">Loading...</p>
+          )}
 
-        {/* Display Final Answer */}
-        {finalAnswer && (
+          {/* Display Chat History */}
           <div className="mt-6">
-            <h3 className="font-semibold text-xl mb-3">Final Answer:</h3>
-            <p className="text-gray-900 mb-4 font-semibold">
-              {finalAnswer.split("*")[0].trim()}{" "}
-              {/* Display the first line outside the list */}
-            </p>
-            <ul className="list-disc pl-6">
-              {formatFinalAnswer(finalAnswer)
-                .slice(1)
-                .map((point, index) => (
-                  <li key={index} className="text-gray-700 mb-2">
-                    {point}
-                  </li>
-                ))}
+            <h3 className="font-semibold text-xl mb-3">Chat History:</h3>
+            <ul>
+              {history.map((msg, index) => (
+                <li key={index} className="mb-4 p-4 border-b">
+                  <div>
+                    {/* User message */}
+                    <p className="font-semibold text-lg text-blue-600">User:</p>
+                    <p className="text-gray-700 mb-2">{msg.user_message}</p>
+                  </div>
+
+                  <div>
+                    {/* Bot response */}
+                    <p className="font-semibold text-lg text-green-600">Bot:</p>
+                    <div className="bg-gray-100 p-4 rounded-lg shadow-sm">
+                      {msg.bot_response && Array.isArray(msg.bot_response) ? (
+                        <ul className="list-disc pl-6">
+                          {msg.bot_response.map((point, idx) => (
+                            <li key={idx} className="text-gray-800 mb-2">
+                              {point}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : (
+                        <p className="text-gray-700">{msg.bot_response}</p>
+                      )}
+                    </div>
+                  </div>
+                </li>
+              ))}
             </ul>
           </div>
-        )}
 
-        {/* Reset Session Button */}
-        <button
-          onClick={handleResetSession}
-          className="w-full bg-red-600 text-white p-2 rounded-lg hover:bg-red-700 transition duration-300 mt-4"
-        >
-          End Chat
-        </button>
-      </div>
+          {/* Display Final Answer */}
+          {/* {finalAnswer && (
+            <div className="mt-6">
+              <h3 className="font-semibold text-xl mb-3">Final Answer:</h3>
+              <p className="text-gray-900 mb-4 font-semibold">{finalAnswer}</p>
+            </div>
+          )} */}
+
+          {/* Reset Session Button */}
+          <button
+            onClick={handleResetSession}
+            className="w-full bg-red-600 text-white p-2 rounded-lg hover:bg-red-700 transition duration-300 mt-4"
+          >
+            End Chat
+          </button>
+        </div>
+      )}
     </div>
   );
 };
