@@ -3,6 +3,7 @@ import "./App.css";
 import ChatPage from "./pages/ChatPage";
 import LandingPage from "./pages/LandingPage";
 import Layout from "./components/Layout";
+import About from "./pages/About";
 
 const router = createBrowserRouter([
   {
@@ -16,6 +17,10 @@ const router = createBrowserRouter([
       {
         path: "/chat",
         element: <ChatPage />,
+      },
+      {
+        path: "/about",
+        element: <About />,
       },
     ],
   },
