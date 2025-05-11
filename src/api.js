@@ -64,3 +64,35 @@ export const searchRelevantArticles = async (query) => {
     throw error;
   }
 };
+
+export const fetchSessionId = async () => {
+  try {
+    const response = await axios.get(`${BASE_URL}/start-session/`);
+    return response.data.session_id;
+  } catch (error) {
+    console.error("Error fetching session ID:", error);
+    throw error;
+  }
+};
+
+export const fetchSessionHistory = async (sessionId) => {
+  try {
+    const response = await axios.get(`${BASE_URL}/get-history/${sessionId}`);
+    return response.data.session_history;
+  } catch (error) {
+    console.error("Error fetching session history:", error);
+    throw error;
+  }
+};
+
+export const clearSession = async (sessionId) => {
+  try {
+    const response = await axios.delete(
+      `${BASE_URL}/clear-session/${sessionId}`
+    );
+    return response.data.message;
+  } catch (error) {
+    console.error("Error clearing session:", error);
+    throw error;
+  }
+};
