@@ -65,7 +65,9 @@ const ChatPage = () => {
       );
 
       // Format the final_answer before adding it to history
+      console.log("final_answer before formatting:", final_answer);
       const formattedAnswer = formatFinalAnswer(final_answer);
+      console.log("formattedAnswer:", formattedAnswer);
 
       // After getting the bot response, update the history
       setHistory((prevHistory) => [
@@ -117,8 +119,8 @@ const ChatPage = () => {
 
   // Function to format the final answer
   const formatFinalAnswer = (answer) => {
-    // Remove the first line (":")
-    const formattedAnswer = answer.split(":")[1].trim(); // Split at the colon and take the part after
+    // Extract the main body of the answer excluding the first line
+    const formattedAnswer = answer.split("\n").slice(1).join("\n").trim(); // Split by newline, exclude the first line, and rejoin
 
     // Split the answer into bullet points based on the asterisks (*)
     const points = formattedAnswer
